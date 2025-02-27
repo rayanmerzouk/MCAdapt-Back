@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'PoppinsExtraLight';
+  src: url('./assets/fonts/Poppins-ExtraLight.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'PoppinsLight';
+  src: url('./assets/fonts/Poppins-Light.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'PoppinsMedium';
+  src: url('./assets/fonts/Poppins-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'PoppinsRegular';
+  src: url('./assets/fonts/Poppins-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'PoppinsSemiBold';
+  src: url('./assets/fonts/Poppins-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'PoppinsThin';
+  src: url('./assets/fonts/Poppins-Thin.ttf') format('truetype');
+}
+
+@layer base {
+  .font-poppins-ExtraLight {
+    font-family: 'PoppinsExtraLight', sans-serif;
+  }
+
+  .font-poppins-light {
+    font-family: 'PoppinsLight', sans-serif;
+  }
+
+  .font-poppins-regular {
+    font-family: 'PoppinsRegular', sans-serif;
+  }
+
+  .font-poppins-medium {
+    font-family: 'PoppinsMedium', sans-serif;
+  }
+
+  .font-poppins-semibold {
+    font-family: 'PoppinsSemiBold', sans-serif;
+  }
+}

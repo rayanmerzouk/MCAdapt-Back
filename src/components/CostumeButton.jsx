@@ -1,7 +1,7 @@
-export const CostumeButton = ({ text, wid, hg }) => {
+export const CostumeButton = () => {
   return (
     <>
-      <button className="rounded-2xl bg-black text-white text-sm cursor-pointer	font-poppins-regular">
+      <button className="rounded-sm bg-orange-300 text-black text-sm cursor-pointer	font-poppins-regular w-30 hover:bg-gray-200 h-6 ">
         Login
       </button>
     </>

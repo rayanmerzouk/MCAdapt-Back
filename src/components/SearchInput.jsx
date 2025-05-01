@@ -3,24 +3,25 @@ import { loop } from '../../assets'
 
 export const SearchInput = () => {
   return (
-    <div
-      className="grid grid-cols-[1fr_8fr] 
-    border-0 rounded-2xl gap-5  bg-gray-200"
-    >
-      <div className=" border-black h-[30px]">
-        <img
-          src={loop}
-          alt="Search"
-          className="w-full h-full object-contain "
-        />
+    <>
+   
+    <div>
+      <img className = "absolute w-6 h-6 mt-[1px]"src={loop} alt="" />
+      <input
+      
+        type="text"
+        className="w-70 h-full  focus:outline-none   font-poppins-regular text-sm   border-b-1 bg-gray-100 rounded-sm pl-7"
+        placeholder="Search... "
+       
+      />
+
       </div>
 
-      <input
-        type="text"
-        className="w-full h-full  focus:outline-none text-start m-auto font-poppins-regular text-sm"
-        placeholder="search what you're interested in"
-      />
-    </div>
+
+      
+      </>
+
+    
   )
 }
 

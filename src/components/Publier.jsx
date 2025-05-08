@@ -5,7 +5,7 @@ import SideBar from "../components/SideBar";
 
 export const Publier = () => {
   const { cards, setCards } = useContext(CardContext);
-  const { user } = useAuth(); // ✅ récupération de l'utilisateur connecté
+  const { user } = useAuth();
 
   const [images, setImages] = useState([]);
   const [profileImage, setProfileImage] = useState(null);
@@ -14,6 +14,8 @@ export const Publier = () => {
     type: "",
     description: "",
     price: "",
+    productEmail: "",
+    productPassword: "",
   });
 
   const openFileExplorer = () => {
@@ -23,9 +25,7 @@ export const Publier = () => {
   const handleImageChange = (event) => {
     const files = Array.from(event.target.files);
     const imagePreviews = files.map((file) => URL.createObjectURL(file));
-
     images.forEach((url) => URL.revokeObjectURL(url));
-
     setImages(imagePreviews);
     setProfileImage(imagePreviews[0]);
   };
@@ -36,14 +36,14 @@ export const Publier = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prevData) => ({
+      ...prevData,
       [name]: value,
-    });
+    }));
   };
 
   const ajouterCard = () => {
-    const { title, type, description, price } = formData;
+    const { title, type, description, price, productEmail, productPassword } = formData;
 
     if (!title || !type || !description || !price) {
       alert("Veuillez remplir toutes les informations du produit.");
@@ -55,38 +55,40 @@ export const Publier = () => {
       return;
     }
 
-    if (images.length > 0) {
-      const newCard = {
-        id: Date.now(),
-        img: profileImage,
-        gallery: images,
-        ...formData,
-        email: user.email, // ✅ email automatiquement ajouté
-      };
+    const newCard = {
+      id: Date.now(),
+      img: profileImage,
+      gallery: images,
+      title,
+      type,
+      description,
+      price,
+      email: user.email,
+      productEmail,
+      productPassword,
+    };
 
-      setCards([...cards, newCard]);
-      setImages([]);
-      setProfileImage(null);
-      setFormData({
-        title: "",
-        type: "",
-        description: "",
-        price: "",
-      });
-    }
+    setCards([...cards, newCard]);
+
+    // reset
+    setImages([]);
+    setProfileImage(null);
+    setFormData({
+      title: "",
+      type: "",
+      description: "",
+      price: "",
+      productEmail: "",
+      productPassword: "",
+    });
   };
 
   return (
     <div className="flex">
       <SideBar />
-
       <div className="flex flex-col p-6 w-full">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-          Publier un produit
-        </h2>
-
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Publier un produit</h2>
         <div className="grid grid-cols-2 gap-8">
-          {/* 📌 FORMULAIRE */}
           <div className="p-6 bg-white shadow-lg rounded-xl border">
             <input
               type="text"
@@ -119,24 +121,36 @@ export const Publier = () => {
               onChange={handleChange}
               className="w-full p-3 border rounded-lg mt-2"
             />
-
+            <input
+              type="email"
+              name="productEmail"
+              placeholder="Email du produit"
+              value={formData.productEmail}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg mt-2"
+            />
+            <input
+              type="text"
+              name="productPassword"
+              placeholder="Mot de passe du produit"
+              value={formData.productPassword}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg mt-2"
+            />
             <button
               onClick={ajouterCard}
-              className="bg-orange-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center hover:cursor-pointer mt-4"
+              className="bg-orange-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mt-4"
             >
               Publier
             </button>
           </div>
-
-          {/* 📌 APERÇU DES IMAGES */}
           <div className="p-6 bg-white shadow-lg rounded-xl border">
             <button
               onClick={openFileExplorer}
-              className="bg-orange-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center hover:cursor-pointer"
+              className="bg-orange-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center"
             >
               Importer des images
             </button>
-
             <input
               type="file"
               multiple
@@ -145,16 +159,13 @@ export const Publier = () => {
               className="hidden"
               id="fileInput"
             />
-
             <div className="mt-4 grid grid-cols-3 gap-3">
               {images.map((src, index) => (
                 <img
                   key={index}
                   src={src}
                   alt={`preview-${index}`}
-                  className={`w-24 h-24 object-cover rounded-lg cursor-pointer ${
-                    src === profileImage ? "border-4 border-blue-500" : ""
-                  }`}
+                  className={`w-24 h-24 object-cover rounded-lg cursor-pointer ${src === profileImage ? "border-4 border-blue-500" : ""}`}
                   onClick={() => handleProfileImageSelect(src)}
                 />
               ))}

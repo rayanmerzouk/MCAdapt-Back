@@ -1,49 +1,65 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";  // Ajoute l'importation ici
 
-// Création du contexte
+// Créer le contexte du panier
 const CartContext = createContext();
 
-// Fournisseur de contexte
+// Hook pour l'utiliser
+export const useCart = () => useContext(CartContext);
+
+// Provider global du panier
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    const stored = localStorage.getItem("cartItems");
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [cartItems, setCartItems] = useState([]);
+  const { user } = useAuth();  // Accéder à l'utilisateur connecté
 
-  // Sauvegarde automatique dans le localStorage à chaque changement
-  useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-  }, [cartItems]);
+  const getUserEmail = () => user?.email;  // Obtenir l'email de l'utilisateur connecté
 
-  // Ajoute un produit au panier
+  const loadCart = () => {
+    const email = getUserEmail();
+    if (!email) return;
+
+    const stored = localStorage.getItem(`cart-${email}`);
+    setCartItems(stored ? JSON.parse(stored) : []);
+  };
+
+  const saveCart = (updatedItems) => {
+    const email = getUserEmail();
+    if (!email) return;
+
+    localStorage.setItem(`cart-${email}`, JSON.stringify(updatedItems));
+  };
+
   const addToCart = (product) => {
-    setCartItems((prevItems) => {
-      const existing = prevItems.find((item) => item.id === product.id);
-      if (existing) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, amount: item.amount + 1 }
-            : item
-        );
-      } else {
-        return [...prevItems, { ...product, amount: 1 }];
-      }
-    });
+    const updatedItems = [...cartItems];
+    const index = updatedItems.findIndex((item) => item.id === product.id);
+    if (index !== -1) {
+      updatedItems[index].amount += product.amount;
+    } else {
+      updatedItems.push(product);
+    }
+    setCartItems(updatedItems);
+    saveCart(updatedItems);
   };
 
-  // Supprime un produit du panier
   const removeFromCart = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    const updatedItems = cartItems.filter((item) => item.id !== id);
+    setCartItems(updatedItems);
+    saveCart(updatedItems);
   };
 
-  // Met à jour la quantité d’un produit dans le panier
   const updateQuantity = (id, quantity) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, amount: quantity } : item
-      )
+    const updatedItems = cartItems.map((item) =>
+      item.id === id ? { ...item, amount: quantity } : item
     );
+    setCartItems(updatedItems);
+    saveCart(updatedItems);
   };
+
+  useEffect(() => {
+    if (user) {
+      loadCart();  // Charger le panier si l'utilisateur est connecté
+    }
+  }, [user]);
 
   return (
     <CartContext.Provider
@@ -53,6 +69,3 @@ export const CartProvider = ({ children }) => {
     </CartContext.Provider>
   );
 };
-
-// Hook personnalisé pour accéder plus facilement au contexte
-export const useCart = () => useContext(CartContext);

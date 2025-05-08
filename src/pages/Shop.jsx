@@ -1,16 +1,25 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { CardContext } from "../CardContext";
 import { useCart } from "../CartContext";
 import SideBar from "../components/SideBar";
 import Card from "../components/Card";
 import { useAuth } from "../AuthContext";
 import { HiDotsVertical } from "react-icons/hi";
+import { useSearch } from "../SearchContext"; // Import du SearchContext
 
 export const Shop = () => {
   const { cards, setCards, loading, error } = useContext(CardContext);
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { searchTerm } = useSearch(); // Récupère le terme de recherche
   const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Fonction pour filtrer les cartes en fonction du terme de recherche
+  const filteredCards = cards.filter((card) => {
+    // Vérifie que le titre de la carte existe et que searchTerm est valide
+    const title = card.title || ''; // Si title est undefined, on remplace par une chaîne vide
+    return title.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const handleDelete = (id) => {
     const updatedCards = cards.filter((card) => card.id !== id);
@@ -22,7 +31,7 @@ export const Shop = () => {
     return user?.email === card.email || user?.role === "admin";
   };
 
-  if (loading || error || cards.length === 0) {
+  if (loading || error || filteredCards.length === 0) {
     return (
       <div className="flex">
         <SideBar />
@@ -39,7 +48,7 @@ export const Shop = () => {
       <div className="flex flex-col p-4 w-full">
         <h1 className="text-2xl font-bold mb-4">Boutique</h1>
         <ul className="grid grid-cols-3 gap-6">
-          {cards.map((card) => (
+          {filteredCards.map((card) => (
             <li key={card.id} className="relative">
               <div className="absolute top-2 right-2 z-10">
                 <button

@@ -51,11 +51,13 @@ const Profil = () => {
               alt="Profile"
               className="w-24 h-24 object-cover rounded-full border-4 border-orange-300"
             />
+            
             <input
               type="file"
               accept="image/*"
               onChange={handleProfileImageChange}
               className="absolute bottom-0 right-0 opacity-0 cursor-pointer"
+              
             />
           </div>
           <div>

@@ -1,15 +1,32 @@
-import React from "react";
-import { useCart } from "../CartContext";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 
 const Panier = () => {
-  const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
+  const { user } = useAuth(); // Assure-toi que ça retourne l'email
+
+  useEffect(() => {
+    if (user?.email) {
+      fetchCartItems();
+    }
+  }, [user]);
+
+  const fetchCartItems = async () => {
+    try {
+      const res = await axios.get(`http://localhost:8000/panier/${user.email}`);
+      setCartItems(res.data); // Assure-toi que le backend retourne les infos produit + amount
+    } catch (err) {
+      console.error("Erreur lors du chargement du panier :", err);
+    }
+  };
 
   const handleBuy = (item) => {
-    const confirmBuy = window.confirm(`Voulez-vous acheter "${item.name}" pour ${item.price * item.amount} DA ?`);
+    const confirmBuy = window.confirm(`Voulez-vous acheter "${item.title}" pour ${item.price * item.amount} DA ?`);
     if (confirmBuy) {
-      navigate(`/paiement/${item.id}`, { state: { product: item } });
+      navigate(`/paiement/${item.productId}`, { state: { product: item } });
     }
   };
 
@@ -18,6 +35,33 @@ const Panier = () => {
     const confirmBuyAll = window.confirm(`Voulez-vous acheter tous les articles pour un total de ${total} DA ?`);
     if (confirmBuyAll) {
       navigate("/paiement", { state: { cartItems } });
+    }
+  };
+
+  const handleRemove = async (productId) => {
+    try {
+      await axios.delete(`http://localhost:8000/panier/${user.personId}/${productId}`);
+      setCartItems((prev) => prev.filter((item) => item.productId !== productId));
+    } catch (err) {
+      console.error("Erreur lors de la suppression :", err);
+    }
+  };
+
+  const handleQuantityChange = async (productId, newAmount) => {
+    if (newAmount < 1) return;
+    try {
+      await axios.put(`http://localhost:8000/panier`, {
+        personId: user.personId,
+        productId,
+        amount: newAmount,
+      });
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.productId === productId ? { ...item, amount: newAmount } : item
+        )
+      );
+    } catch (err) {
+      console.error("Erreur de mise à jour de la quantité :", err);
     }
   };
 
@@ -34,22 +78,22 @@ const Panier = () => {
           <ul className="space-y-6">
             {cartItems.map((item) => (
               <li
-                key={item.id}
+                key={item.productId}
                 className="flex items-center bg-white shadow-md rounded-lg p-4 transition duration-300 hover:shadow-lg"
               >
                 <img
-                  src={item.img || "/default-image.jpg"}
-                  alt={item.name}
+                  src={item.url || "/default-image.jpg"}
+                  alt={item.title}
                   className="h-20 w-20 object-cover rounded-lg border"
                 />
                 <div className="ml-4 flex-1">
-                  <h2 className="font-semibold text-lg">{item.name}</h2>
+                  <h2 className="font-semibold text-lg">{item.title}</h2>
                   <p className="text-gray-500">{item.price} DA</p>
                   <input
                     type="number"
                     min="1"
                     value={item.amount}
-                    onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                    onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value))}
                     className="w-20 mt-2 border border-gray-300 rounded px-2 py-1 focus:outline-none"
                   />
                 </div>
@@ -61,7 +105,7 @@ const Panier = () => {
                     Acheter
                   </button>
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => handleRemove(item.productId)}
                     className="text-red-500 hover:text-red-700 text-sm"
                   >
                     Supprimer

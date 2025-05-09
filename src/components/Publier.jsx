@@ -1,10 +1,8 @@
-import { useState, useContext } from "react";
-import { CardContext } from "../CardContext";
+import { useState } from "react";
 import { useAuth } from "../AuthContext";
 import SideBar from "../components/SideBar";
 
 export const Publier = () => {
-  const { cards, setCards } = useContext(CardContext);
   const { user } = useAuth();
 
   const [images, setImages] = useState([]);
@@ -42,7 +40,7 @@ export const Publier = () => {
     }));
   };
 
-  const ajouterCard = () => {
+  const ajouterCard = async () => {
     const { title, type, description, price, productEmail, productPassword } = formData;
 
     if (!title || !type || !description || !price) {
@@ -55,32 +53,46 @@ export const Publier = () => {
       return;
     }
 
-    const newCard = {
-      id: Date.now(),
-      img: profileImage,
-      gallery: images,
+    // Construction du produit à envoyer
+    const newProduct = {
       title,
-      type,
+      category: type,
       description,
-      price,
+      price: parseFloat(price),
+      source: profileImage, // URL locale pour test, à remplacer si tu stockes des fichiers
       email: user.email,
-      productEmail,
-      productPassword,
+      password: productPassword,
     };
 
-    setCards([...cards, newCard]);
+    try {
+      const response = await fetch("http://localhost:8000/produits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newProduct),
+      });
 
-    // reset
-    setImages([]);
-    setProfileImage(null);
-    setFormData({
-      title: "",
-      type: "",
-      description: "",
-      price: "",
-      productEmail: "",
-      productPassword: "",
-    });
+      if (!response.ok) {
+        throw new Error("Erreur lors de la publication du produit.");
+      }
+
+      alert("Produit publié avec succès !");
+      // Reset
+      setImages([]);
+      setProfileImage(null);
+      setFormData({
+        title: "",
+        type: "",
+        description: "",
+        price: "",
+        productEmail: "",
+        productPassword: "",
+      });
+    } catch (err) {
+      alert(err.message);
+      console.error("Erreur :", err);
+    }
   };
 
   return (

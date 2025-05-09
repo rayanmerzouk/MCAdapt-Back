@@ -12,10 +12,18 @@ const Paiement = () => {
   const [product, setProduct] = useState(null);
   const [isPaid, setIsPaid] = useState(false);
   const [message, setMessage] = useState("");
+  const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
     if (state?.product) {
       setProduct(state.product);
+    } else if (state?.cartItems) {
+      setCartItems(state.cartItems);
+      const totalPrice = state.cartItems.reduce(
+        (sum, item) => sum + item.price * item.amount,
+        0
+      );
+      setProduct({ title: "Panier complet", price: totalPrice });
     } else if (id) {
       const found = cards.find((item) => item.id.toString() === id);
       if (found) setProduct(found);
@@ -28,9 +36,20 @@ const Paiement = () => {
 
     setTimeout(() => {
       setIsPaid(true);
-      setMessage(
-        `✅ Paiement effectué !\n\nIdentifiants du compte :\nEmail : ${product.productEmail}\nMot de passe : ${product.productPassword}`
-      );
+
+      if (cartItems.length > 0) {
+        setMessage(
+          `✅ Paiement effectué pour tous les articles du panier.\n\nMontant total : ${product.price} DA.`
+        );
+      } else {
+        setMessage(
+          `✅ Paiement effectué !\n\n${
+            product.productEmail && product.productPassword
+              ? `Identifiants du compte :\nEmail : ${product.productEmail}\nMot de passe : ${product.productPassword}`
+              : "Merci pour votre achat."
+          }`
+        );
+      }
     }, 1500);
   };
 
@@ -39,11 +58,29 @@ const Paiement = () => {
     doc.setFontSize(16);
     doc.text("Reçu de Paiement - C-shop", 20, 20);
     doc.setFontSize(12);
-    doc.text(`Produit : ${product.title}`, 20, 40);
-    doc.text(`Prix : ${product.price} DA`, 20, 50);
-    doc.text(`Date : ${new Date().toLocaleString()}`, 20, 60);
-    doc.text(`Email : ${product.productEmail}`, 20, 80);
-    doc.text(`Mot de passe : ${product.productPassword}`, 20, 90);
+    doc.text(`Date : ${new Date().toLocaleString()}`, 20, 30);
+
+    if (cartItems.length > 0) {
+      doc.text("Articles :", 20, 40);
+      let y = 50;
+      cartItems.forEach((item, index) => {
+        doc.text(
+          `${index + 1}. ${item.title} - ${item.price} DA x ${item.amount}`,
+          20,
+          y
+        );
+        y += 10;
+      });
+      doc.text(`Total : ${product.price} DA`, 20, y + 10);
+    } else {
+      doc.text(`Produit : ${product.title}`, 20, 40);
+      doc.text(`Prix : ${product.price} DA`, 20, 50);
+      if (product.productEmail && product.productPassword) {
+        doc.text(`Email : ${product.productEmail}`, 20, 70);
+        doc.text(`Mot de passe : ${product.productPassword}`, 20, 80);
+      }
+    }
+
     doc.save("recu-paiement.pdf");
   };
 

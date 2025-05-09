@@ -1,6 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const Contact = () => {
+  const [status, setStatus] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      name: e.target.name.value,
+      email: e.target.email.value,
+      message: e.target.message.value
+    };
+
+    try {
+      const response = await fetch('http://localhost:8000/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus('Message envoyé avec succès.');
+        e.target.reset(); // Réinitialiser le formulaire
+      } else {
+        setStatus(data.error || 'Erreur lors de l’envoi.');
+      }
+    } catch (error) {
+      setStatus('Erreur réseau.');
+      console.error('Erreur:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden">
@@ -8,22 +42,44 @@ const Contact = () => {
           {/* Form Section */}
           <div className="p-8">
             <h2 className="text-3xl font-bold text-orange-500 mb-6">Contactez-nous</h2>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nom complet</label>
-                <input type="text" required placeholder="Votre nom" className="mt-1 p-2 w-full border rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" />
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  placeholder="Votre nom"
+                  className="mt-1 p-2 w-full border rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" required placeholder="email@exemple.com" className="mt-1 p-2 w-full border rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" />
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="email@exemple.com"
+                  className="mt-1 p-2 w-full border rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Message</label>
-                <textarea rows="4" required placeholder="Votre message..." className="mt-1 p-2 w-full border rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" />
+                <textarea
+                  name="message"
+                  rows="4"
+                  required
+                  placeholder="Votre message..."
+                  className="mt-1 p-2 w-full border rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                />
               </div>
-              <button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+              <button
+                type="submit"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition duration-300"
+              >
                 Envoyer
               </button>
+              {status && <p className="mt-4 text-sm text-gray-600">{status}</p>}
             </form>
           </div>
 

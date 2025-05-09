@@ -1,95 +1,116 @@
-import { useContext, useState, useEffect } from "react";
-import { CardContext } from "../CardContext";
-import { useCart } from "../CartContext";
+import { useEffect, useState } from "react";
 import SideBar from "../components/SideBar";
 import Card from "../components/Card";
-import { useAuth } from "../AuthContext";
-import { HiDotsVertical } from "react-icons/hi";
-import { useSearch } from "../SearchContext"; // Import du SearchContext
+import { useNavigate } from "react-router-dom";
 
-export const Shop = () => {
-  const { cards, setCards, loading, error } = useContext(CardContext);
-  const { addToCart } = useCart();
-  const { user } = useAuth();
-  const { searchTerm } = useSearch(); // Récupère le terme de recherche
-  const [openMenuId, setOpenMenuId] = useState(null);
+const Shop = () => {
+  const [cards, setCards] = useState([]);
+  const [filteredCards, setFilteredCards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Fonction pour filtrer les cartes en fonction du terme de recherche
-  const filteredCards = cards.filter((card) => {
-    // Vérifie que le titre de la carte existe et que searchTerm est valide
-    const title = card.title || ''; // Si title est undefined, on remplace par une chaîne vide
-    return title.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  // Fetching products from the backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/products");
+        const data = await res.json();
 
-  const handleDelete = (id) => {
-    const updatedCards = cards.filter((card) => card.id !== id);
-    setCards(updatedCards);
-    localStorage.setItem("cards", JSON.stringify(updatedCards));
+        if (!Array.isArray(data)) {
+          throw new Error("Données reçues invalides.");
+        }
+
+        setCards(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des produits :", err);
+        setError("Erreur de chargement des produits.");
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // Filtering products based on category
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get("type");
+
+    if (category) {
+      const filtered = cards.filter((card) => card.category === category);
+      setFilteredCards(filtered);
+    } else {
+      setFilteredCards(cards);
+    }
+  }, [cards]);
+
+  // Handle delete product
+  const handleDeleteProduct = async (productId) => {
+    try {
+      const res = await fetch(`http://localhost:8000/products/${productId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Échec de la suppression du produit.");
+
+      setCards(cards.filter((card) => card.productId !== productId)); // Remove deleted product from state
+      alert("Produit supprimé avec succès.");
+    } catch (err) {
+      alert("Erreur lors de la suppression.");
+      console.error(err);
+    }
   };
 
-  const isOwnerOrAdmin = (card) => {
-    return user?.email === card.email || user?.role === "admin";
+  // Handle report product
+  const handleReportProduct = async (productId) => {
+    try {
+      const res = await fetch(`http://localhost:8000/products/${productId}/report`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Échec du signalement.");
+
+      alert("Produit signalé avec succès.");
+    } catch (err) {
+      alert("Erreur lors du signalement.");
+      console.error(err);
+    }
   };
 
-  if (loading || error || filteredCards.length === 0) {
-    return (
-      <div className="flex">
-        <SideBar />
-        <div className="flex items-center justify-center min-h-screen w-full">
-          <p>{loading ? "Chargement..." : error ? `Erreur: ${error}` : "Aucun produit."}</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <p className="p-6">Chargement des produits...</p>;
+  if (error) return <p className="p-6 text-red-500">{error}</p>;
 
   return (
     <div className="flex">
       <SideBar />
-      <div className="flex flex-col p-4 w-full">
-        <h1 className="text-2xl font-bold mb-4">Boutique</h1>
-        <ul className="grid grid-cols-3 gap-6">
-          {filteredCards.map((card) => (
-            <li key={card.id} className="relative">
-              <div className="absolute top-2 right-2 z-10">
-                <button
-                  onClick={() =>
-                    setOpenMenuId(openMenuId === card.id ? null : card.id)
-                  }
-                  className="text-gray-600 hover:text-black p-1"
-                >
-                  <HiDotsVertical size={20} />
-                </button>
-
-                {openMenuId === card.id && (
-                  <div className="absolute right-0 mt-1 w-32 bg-white border rounded shadow-md z-20">
-                    {isOwnerOrAdmin(card) && (
-                      <button
-                        onClick={() => handleDelete(card.id)}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        🗑 Supprimer
-                      </button>
-                    )}
-                    <button
-                      onClick={() => alert(`Signalé : ${card.name}`)}
-                      className="w-full text-left px-4 py-2 text-sm text-orange-500 hover:bg-orange-50"
-                    >
-                      🚩 Signaler
-                    </button>
-                  </div>
-                )}
+      <div className="flex-1 p-6">
+        <h2 className="text-2xl font-bold mb-4">Boutique</h2>
+        {filteredCards.length === 0 ? (
+          <p className="text-gray-500">Aucun produit trouvé.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {filteredCards.map((card) => (
+              <div key={card.productId} className="relative">
+                <Card {...card} />
+                {/* Buttons for delete and report */}
+                <div className="absolute top-2 right-2 space-x-2">
+                  <button
+                    onClick={() => handleDeleteProduct(card.productId)}
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                  >
+                    Supprimer
+                  </button>
+                  <button
+                    onClick={() => handleReportProduct(card.productId)}
+                    className="bg-yellow-500 text-white px-4 py-2 rounded"
+                  >
+                    Signaler
+                  </button>
+                </div>
               </div>
-
-              <Card {...card} isShop={true} />
-              <button
-                onClick={() => addToCart(card)}
-                className="ml-10 w-48 bg-orange-400 text-white py-2 rounded hover:bg-orange-500"
-              >
-                Ajouter au panier
-              </button>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

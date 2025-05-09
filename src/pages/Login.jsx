@@ -1,27 +1,24 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";  // Ajouter l'import de Link
-import { useAuth } from "../AuthContext";  // Importation du contexte
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 import { validateEmail, validatePassword } from "../utils/validators";
 
 function Login() {
-  const navigate = useNavigate();
-  const { login } = useAuth();  // Utilisation de la méthode login du contexte
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validateEmail(email) || !validatePassword(password)) {
       setError("Email ou mot de passe invalide.");
       return;
     }
 
-    const isLoggedIn = login(email, password);  // Appel de la méthode login dans AuthContext
-
-    if (isLoggedIn) {
-      alert("Connexion réussie !");
-      navigate("/");  // Redirection vers la page d'accueil
+    const success = await login(email, password);
+    if (success) {
+      navigate("/");
     } else {
       setError("Identifiants incorrects.");
     }
@@ -40,7 +37,6 @@ function Login() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        
         <input
           type="password"
           placeholder="Mot de passe"
@@ -48,14 +44,13 @@ function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        
         <button
           onClick={handleLogin}
-          className="w-full bg-orange-400 text-white p-2 rounded hover:bg-gray-200 hover:cursor-pointer hover:text-black"
+          className="w-full bg-orange-400 text-white p-2 rounded hover:bg-gray-200 hover:text-black"
         >
           Se connecter
         </button>
-        
+
         <p className="mt-4 text-sm text-center">
           Pas encore inscrit ?{" "}
           <Link to="/signup" className="text-blue-500 hover:underline">

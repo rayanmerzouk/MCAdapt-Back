@@ -1,22 +1,28 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { CardContext } from '../CardContext';
-import { useCart } from '../CartContext'; // 👈 Importer le contexte du panier
 import { FaStar } from 'react-icons/fa';
+import { useCart } from '../CartContext'; // 👈 Utiliser le contexte du panier
 
 const DetailedProduct = () => {
   const { id } = useParams();
-  const { cards } = useContext(CardContext);
   const { addToCart } = useCart(); // 👈 Utiliser addToCart depuis le CartContext
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({ name: '', rating: 0, comment: '' });
 
   useEffect(() => {
-    const selectedProduct = cards.find((p) => p.id === parseInt(id));
-    setProduct(selectedProduct);
-    setReviews([]); // Au départ, aucun avis enregistré
-  }, [id, cards]);
+    // Fetch les détails du produit à partir de l'API backend
+    fetch(`/api/products/${id}`)
+      .then((response) => response.json())
+      .then((data) => setProduct(data))
+      .catch((error) => console.error('Erreur lors du chargement du produit:', error));
+
+    // Pour charger les avis (par exemple, depuis l'API)
+    fetch(`/api/products/${id}/reviews`)
+      .then((response) => response.json())
+      .then((data) => setReviews(data))
+      .catch((error) => console.error('Erreur lors du chargement des avis:', error));
+  }, [id]);
 
   const handleReviewChange = (e) => {
     const { name, value } = e.target;
@@ -29,9 +35,20 @@ const DetailedProduct = () => {
 
   const handleSubmitReview = (e) => {
     e.preventDefault();
-    const updatedReviews = [...reviews, { ...newReview, id: reviews.length + 1 }];
-    setReviews(updatedReviews);
-    setNewReview({ name: '', rating: 0, comment: '' });
+    // Appel à l'API pour soumettre l'avis (par exemple)
+    fetch(`/api/products/${id}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newReview),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setReviews((prev) => [...prev, data]);
+        setNewReview({ name: '', rating: 0, comment: '' });
+      })
+      .catch((error) => console.error('Erreur lors de la soumission de l\'avis:', error));
   };
 
   const calculateAverageRating = () => {
@@ -52,7 +69,7 @@ const DetailedProduct = () => {
         {/* Image */}
         <div className="flex items-center justify-center">
           <img
-            src={product.img}
+            src={product.source}
             alt={product.title}
             className="w-full h-[350px] object-contain rounded-lg border"
           />

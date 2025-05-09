@@ -58,6 +58,7 @@ const Profil = () => {
               onChange={handleProfileImageChange}
               className="absolute bottom-0 right-0 opacity-0 cursor-pointer"
               
+              
             />
           </div>
           <div>

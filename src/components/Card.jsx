@@ -3,26 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { FaStar } from 'react-icons/fa';
 
 export const Card = ({
-  id,
-  img,
-  name,
+  productId,
+  source,
+  title,
   price,
-  favorite,
   rated = 1,
   isOnSale = false,
-  sex,
-  type,
-  isOwner = false,
-  isAdmin = false,
-  onDelete,
-  onReport,
-  onClickAddToCart,
+  category,
 }) => {
   const navigate = useNavigate();
   const [rating] = useState(rated);
 
   const handleNavigateToProduct = () => {
-    navigate(`/product/${id}`);
+    navigate(`/product/${productId}`);
   };
 
   const renderStars = () => (
@@ -43,14 +36,14 @@ export const Card = ({
     >
       <div className="h-[180px] bg-gray-100 flex items-center justify-center">
         <img
-          src={img}
-          alt={name}
+          src={source}
+          alt={title}
           className="object-contain h-[140px] transition-transform duration-300 hover:scale-105"
         />
       </div>
       <div className="p-4 space-y-2">
-        <div className="text-sm text-gray-500 uppercase tracking-wide">{sex} | {type}</div>
-        <h2 className="text-lg font-semibold text-gray-800 truncate">{name}</h2>
+        <div className="text-sm text-gray-500 uppercase tracking-wide">{category}</div>
+        <h2 className="text-lg font-semibold text-gray-800 truncate">{title}</h2>
         {renderStars()}
         <div className="flex justify-between items-center mt-2">
           <p className="text-orange-500 font-bold text-base">{price} DA</p>

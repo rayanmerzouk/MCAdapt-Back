@@ -1,44 +1,51 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
+import axios from "axios";
 
-// Crée le contexte
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
-// Hook pour l'utiliser
-export const useAuth = () => useContext(AuthContext);
-
-// Provider global
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
-  // Exemple : récupérer depuis localStorage
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
-  }, []);
-
-  const login = (email, password) => {
-    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
-    const foundUser = storedUsers.find(user => user.email === email && user.password === password);
-
-    if (foundUser) {
-      setUser({ email: foundUser.email, role: foundUser.role || "user" });
-      localStorage.setItem("user", JSON.stringify({ email: foundUser.email, role: foundUser.role || "user" }));
-      localStorage.setItem("userEmail", foundUser.email);  // Sauvegarder l'email dans localStorage
-      return true;  // Connexion réussie
+  const login = async (email, password) => {
+    try {
+      const res = await axios.post("http://localhost:8000/login", { email, password });
+      if (res.data && res.data.personId) {
+        setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
+        return true;
+      }
+    } catch (err) {
+      console.error("Erreur de connexion :", err);
     }
-    return false;  // Identifiants incorrects
+    return false;
+  };
+
+  const signup = async (userData) => {
+    try {
+      const res = await axios.post("http://localhost:8000/signup", userData);
+      if (res.data && res.data.personId) {
+        setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
+        return true;
+      }
+    } catch (err) {
+      console.error("Erreur d'inscription :", err);
+    }
+    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    localStorage.removeItem("userEmail");  // Supprimer l'email lors de la déconnexion
-    localStorage.removeItem(`cart-${localStorage.getItem("userEmail")}`);  // Supprimer le panier associé
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}

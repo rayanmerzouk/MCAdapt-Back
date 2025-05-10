@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../AuthContext";
 
 function Signup() {
-  const { signup } = useAuth();
   const navigate = useNavigate(); // Correct line, no extra text here
   const [form, setForm] = useState({
-    nom: "",
-    prenom: "",
+    username: "",  // Remplacement de nom et prénom par username
+    fullName: "",  // fullName au lieu de nom et prénom
     email: "",
-    telephone: "",
     password: "",
     confirmPassword: "",
   });
@@ -22,10 +19,10 @@ function Signup() {
   };
 
   const handleSignup = async () => {
-    const { nom, prenom, email, telephone, password, confirmPassword } = form;
+    const { username, fullName, email, password, confirmPassword } = form;
 
     // Validation des champs
-    if (!nom || !prenom || !telephone || !email || !password || !confirmPassword) {
+    if (!username || !fullName || !email || !password || !confirmPassword) {
       setError("Tous les champs sont obligatoires.");
       return;
     }
@@ -43,10 +40,9 @@ function Signup() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          nom,
-          prenom,
+          username,   // Utilisation du username
+          fullName,   // Utilisation du fullName
           email,
-          telephone,
           password,
         }),
       });
@@ -55,7 +51,7 @@ function Signup() {
 
       if (response.ok) {
         // Inscription réussie
-        setSuccessMessage(data.message);
+        setSuccessMessage("Inscription réussie !");
         setError("");
         setTimeout(() => {
           navigate("/login");  // Rediriger vers la page de login après 2 secondes
@@ -81,18 +77,18 @@ function Signup() {
 
         <input
           type="text"
-          name="nom"
-          placeholder="Nom"
+          name="username"
+          placeholder="Nom d'utilisateur"
           className="w-full p-2 mb-4 border rounded"
-          value={form.nom}
+          value={form.username}
           onChange={handleChange}
         />
         <input
           type="text"
-          name="prenom"
-          placeholder="Prénom"
+          name="fullName"
+          placeholder="Nom complet"
           className="w-full p-2 mb-4 border rounded"
-          value={form.prenom}
+          value={form.fullName}
           onChange={handleChange}
         />
         <input
@@ -101,14 +97,6 @@ function Signup() {
           placeholder="Email"
           className="w-full p-2 mb-4 border rounded"
           value={form.email}
-          onChange={handleChange}
-        />
-        <input
-          type="text"
-          name="telephone"
-          placeholder="Téléphone"
-          className="w-full p-2 mb-4 border rounded"
-          value={form.telephone}
           onChange={handleChange}
         />
         <input

@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 function Signup() {
-  const navigate = useNavigate(); // Correct line, no extra text here
+  const navigate = useNavigate();
   const [form, setForm] = useState({
-    username: "",  // Remplacement de nom et prénom par username
-    fullName: "",  // fullName au lieu de nom et prénom
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
+    type: false, // Initialisation du type à false pour un utilisateur standard
   });
 
   const [error, setError] = useState("");
@@ -19,10 +19,10 @@ function Signup() {
   };
 
   const handleSignup = async () => {
-    const { username, fullName, email, password, confirmPassword } = form;
+    const { username, email, password, confirmPassword, type } = form;
 
     // Validation des champs
-    if (!username || !fullName || !email || !password || !confirmPassword) {
+    if (!username || !email || !password || !confirmPassword) {
       setError("Tous les champs sont obligatoires.");
       return;
     }
@@ -40,10 +40,10 @@ function Signup() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,   // Utilisation du username
-          fullName,   // Utilisation du fullName
+          username,
           email,
           password,
+          type, // Envoi de la valeur de type
         }),
       });
 
@@ -54,7 +54,7 @@ function Signup() {
         setSuccessMessage("Inscription réussie !");
         setError("");
         setTimeout(() => {
-          navigate("/login");  // Rediriger vers la page de login après 2 secondes
+          navigate("/login");
         }, 2000);
       } else {
         // Erreur lors de l'inscription
@@ -81,14 +81,6 @@ function Signup() {
           placeholder="Nom d'utilisateur"
           className="w-full p-2 mb-4 border rounded"
           value={form.username}
-          onChange={handleChange}
-        />
-        <input
-          type="text"
-          name="fullName"
-          placeholder="Nom complet"
-          className="w-full p-2 mb-4 border rounded"
-          value={form.fullName}
           onChange={handleChange}
         />
         <input
